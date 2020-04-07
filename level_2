@@ -1,84 +1,21 @@
 level 2:
 make
-# The compiled out/bios.bin is the bios part file
+# The compiled out/bios.bin is the bios code that can be used for running the vm.
+# SeaBIOS is the default bios used for qemu.
+# Also, we can bring our BIOS compiled to the qemu with -bios out\bios.bin
 
 ### Then I had to configure a vm with QEMU so I did:
 # I created a Disk for the VM:
-qemu-img create -f qcow2 ~/QEMU/ubuntu-desktop-18.04.qcow2 10G
+qemu-img create -f qcow2 ~/QEMU/mini.qcow2 12G
 
-# I ran the VM with an iso to set up the vm:
-sudo qemu-system-x86_64 \
-  -m 2048 \
-  -vga virtio \
-  -show-cursor \
-  -enable-kvm \
-  -cdrom ~/QEMU/ubuntu-18.04.4-desktop-amd64.iso \
-  -drive file=~/QEMU/ubuntu-desktop-18.04.qcow2,if=virtio \
+# Boot the vm with an iso to first boot
+sudo qemu-system-x86_64 -m 2048 -show-cursor -usb -device usb-tablet \
+  -cdrom /mnt/c/Users/Ginger/Downloads/mini.iso \
+  -drive file=~/QEMU/mini.qcow2,if=virtio \
   -bios out/bios.bin
 
-# Then I tried to not use the KVM mode so it works but slow:
-sudo qemu-system-x86_64 \
-  -m 2048 \
-  -vga virtio \
-  -show-cursor \
-  -usb \
-  -device usb-tablet \
-  -cdrom ~/QEMU/ubuntu-18.04.4-desktop-amd64.iso \
-  -drive file=~/QEMU/ubuntu-desktop-18.04.qcow2,if=virtio \
+# Boot the vm general after first boot
+sudo qemu-system-x86_64 -m 2048 -show-cursor -usb -device usb-tablet \
+  -drive file=~/QEMU/mini.qcow2,if=virtio \
   -bios out/bios.bin
 
-# So I tried better the kvm mode:
-sudo qemu-system-x86_64 \
-  -m 2048 \
-  -vga virtio \
-  -show-cursor \
-  -usb \
-  -device usb-tablet \
-  -enable-kvm \
-  -cdrom ~/QEMU/ubuntu-18.04.4-desktop-amd64.iso \
-  -drive file=~/QEMU/ubuntu-desktop-18.04.qcow2,if=virtio \
-  -accel kvm \
-  -bios out/bios.bin\
-  -cpu host \
-  -machine ubuntu
-
-# Then tried other.
-sudo apt-get install libncurses5-dev libncursesw5-dev
-
-sudo qemu-system-x86_64 -bios out/bios.bin -cdrom ~/QEMU/ubuntu-18.04.4-desktop-amd64.iso -m 1024
-
-# Trying to create vm with virt-install
-sudo virt-install --virt-type=kvm --name=ukvm1404 --ram 1024 --vcpus=1 --virt-type=kvm --hvm --cdrom ~/Downloads/mini.iso --network network=default --graphics vnc --disk pool=default,size=10,bus=virtio,format=qcow2 --noautoconsole
-
-sudo virt-viewer ukvm1404
-
-# Then my vm is (from ps):
-grep --color=auto grep
-user@ubuntu:~$ ps -fade | grep qemu-
-libvirt+   2501      1 99 05:18 ?        00:10:56 qemu-system-x86_64 -enable-kvm -name guest=ukvm1404,debug-threads=on -S -object secret,id=masterKey0,format=raw,file=/var/lib/libvirt/qemu/domain-1-ukvm1404/master-key.aes -machine pc-i440fx-bionic,accel=kvm,usb=off,dump-guest-core=off -cpu Broadwell-noTSX-IBRS -m 1024 -realtime mlock=off -smp 1,sockets=1,cores=1,threads=1 -uuid acab20b5-d7b6-494f-a4f4-02d6b3d66b4c -no-user-config -nodefaults -chardev socket,id=charmonitor,path=/var/lib/libvirt/qemu/domain-1-ukvm1404/monitor.sock,server,nowait -mon chardev=charmonitor,id=monitor,mode=control -rtc base=utc,driftfix=slew -global kvm-pit.lost_tick_policy=delay -no-hpet -no-shutdown -global PIIX4_PM.disable_s3=1 -global PIIX4_PM.disable_s4=1 -boot strict=on -device ich9-usb-ehci1,id=usb,bus=pci.0,addr=0x4.0x7 -device ich9-usb-uhci1,masterbus=usb.0,firstport=0,bus=pci.0,multifunction=on,addr=0x4 -device ich9-usb-uhci2,masterbus=usb.0,firstport=2,bus=pci.0,addr=0x4.0x1 -device ich9-usb-uhci3,masterbus=usb.0,firstport=4,bus=pci.0,addr=0x4.0x2 -drive file=/var/lib/libvirt/images/ukvm1404.qcow2,format=qcow2,if=none,id=drive-virtio-disk0 -device virtio-blk-pci,scsi=off,bus=pci.0,addr=0x5,drive=drive-virtio-disk0,id=virtio-disk0,bootindex=1 -drive if=none,id=drive-ide0-0-0,readonly=on -device ide-cd,bus=ide.0,unit=0,drive=drive-ide0-0-0,id=ide0-0-0 -netdev tap,fd=26,id=hostnet0 -device rtl8139,netdev=hostnet0,id=net0,mac=52:54:00:2d:3f:b7,bus=pci.0,addr=0x3 -chardev pty,id=charserial0 -device isa-serial,chardev=charserial0,id=serial0 -vnc 127.0.0.1:0 -device cirrus-vga,id=video0,bus=pci.0,addr=0x2 -device virtio-balloon-pci,id=balloon0,bus=pci.0,addr=0x6 -msg timestamp=on
-
-
-=========================
-
-
-
-qemu-system-x86_64 
-  -m 1024 \
-  -vga virtio \
-  -show-cursor \
-  -usb \
-  -device usb-tablet \
-  -enable-kvm \
-  -cdrom ~/QEMU/ubuntu-18.04.3-desktop-i386.iso \
-  -drive file=~/QEMU/ubuntu-desktop-16.04.qcow2,if=virtio \
-  -accel hvf \
-  -cpu host
-
-qemu-system-x86_64 -bios out/bios.bin
-# to open menu
-sudo qemu-system-x86_64 -bios out/bios.bin -boot menu=on,splash-time=15000
-
-# Then I got an error: No bootable device.
-sudo qemu-system-x86_64 -bios out/bios.bin -drive file=/dev/sda1,format=raw,media=disk
-
-sudo qemu-system-x86_64 -bios out/bios.bin -enable-kvm -machine ubuntu,accel=kvm -m 512
